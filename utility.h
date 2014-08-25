@@ -1,0 +1,1 @@
+void sendserver(char *fmt, ...);
