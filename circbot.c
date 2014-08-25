@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
         perror("connet");
     }
 
+    init_users();
+
     sendserver("NICK %s\r\n", alias);
     sendserver("USER %s 8 * :%s\r\n", alias, alias);
     sendserver("JOIN #%s\r\n", channel);
@@ -68,9 +70,22 @@ int main(int argc, char **argv) {
 
         pos = strstr(recvbuf, ".op");
         if (pos) {
-          // TODO: Add authentication
-          char *user = pos + 4;
-          sendserver("MODE #%s +o %s\r\n", channel, user);
+          char *sender = malloc(BUFFERSIZE);
+          sscanf(recvbuf, ":%s", sender);
+          if (is_authorized(sender)) {
+            if (strlen(pos) > 5) { // If more than '.op\r\n'
+              char *user = pos + 4;
+              sendserver("MODE #%s +o %s\r\n", channel, user);
+            } else {
+              char *user = malloc(BUFFERSIZE);
+              sscanf(recvbuf, ":%[^!]s", user);
+              sendserver("MODE #%s +o %s\r\n", channel, user);
+            }
+          }
+          else {
+            sendserver("PRIVMSG #%s :You are not authorized for .op.\r\n", channel);
+          }
+
         }
 
         pos = strstr(recvbuf, ".quit");
