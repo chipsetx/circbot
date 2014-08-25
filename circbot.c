@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
         pos = strstr(recvbuf, ".quit");
         if (pos) {
-          quit(SIGINT); // Calls same routine as a SIG_INT, so fake it.
+          quit(SIGINT); // Calls same routine as a SIGINT, so fake it.
         }
 
         pos = strstr(recvbuf, ".topic");
