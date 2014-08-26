@@ -56,6 +56,11 @@ int main(int argc, char **argv) {
     sendserver("PRIVMSG #%s :Hello from C!\r\n", channel);
 
     // TODO: Parse received messages properly
+    // TODO: Move to correct place
+    // variables used in message processing
+    char hostmask[BUFFERSIZE];
+    char sender[BUFFERSIZE];
+
     char *pos;
     while(1) {
         ret = recv(G_socketfd, recvbuf, BUFFERSIZE-1, 0);
@@ -70,9 +75,7 @@ int main(int argc, char **argv) {
 
         pos = strstr(recvbuf, ".op");
         if (pos) {
-          char hostmask[BUFFERSIZE];
           sscanf(recvbuf, ":%s", hostmask);
-          char sender[BUFFERSIZE];
           sscanf(recvbuf, ":%[^!]s", sender);
 
           if (is_authorized(hostmask)) {
@@ -91,13 +94,26 @@ int main(int argc, char **argv) {
 
         pos = strstr(recvbuf, ".quit");
         if (pos) {
-          quit(SIGINT); // Calls same routine as a SIGINT, so fake it.
+          sscanf(recvbuf, ":%s", hostmask);
+          sscanf(recvbuf, ":%[^!]s", sender);
+
+          if (is_authorized(hostmask)) {
+            quit(SIGINT); // Calls same routine as a SIGINT, so fake it.
+          } else {
+            sendserver("NOTICE %s :You are not authorized for .quit.\r\n", sender);
+          }
         }
 
         pos = strstr(recvbuf, ".topic");
         if (pos) {
-          // TODO: Add authentication
-          sendserver("TOPIC #%s :%s\r\n", channel, pos+7);
+          sscanf(recvbuf, ":%s", hostmask);
+          sscanf(recvbuf, ":%[^!]s", sender);
+
+          if (is_authorized(hostmask)) {
+            sendserver("TOPIC #%s :%s\r\n", channel, pos+7);
+          } else {
+            sendserver("NOTICE %s :You are not authorized for .topic.\r\n", sender);
+          }
         }
 
         pos = strstr(recvbuf, ".time");
