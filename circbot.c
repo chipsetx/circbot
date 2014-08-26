@@ -70,20 +70,21 @@ int main(int argc, char **argv) {
 
         pos = strstr(recvbuf, ".op");
         if (pos) {
-          char *sender = malloc(BUFFERSIZE);
-          sscanf(recvbuf, ":%s", sender);
-          if (is_authorized(sender)) {
+          char hostmask[BUFFERSIZE];
+          sscanf(recvbuf, ":%s", hostmask);
+          char sender[BUFFERSIZE];
+          sscanf(recvbuf, ":%[^!]s", sender);
+
+          if (is_authorized(hostmask)) {
             if (strlen(pos) > 5) { // If more than '.op\r\n'
               char *user = pos + 4;
               sendserver("MODE #%s +o %s\r\n", channel, user);
             } else {
-              char *user = malloc(BUFFERSIZE);
-              sscanf(recvbuf, ":%[^!]s", user);
-              sendserver("MODE #%s +o %s\r\n", channel, user);
+              sendserver("MODE #%s +o %s\r\n", channel, sender);
             }
           }
           else {
-            sendserver("PRIVMSG #%s :You are not authorized for .op.\r\n", channel);
+            sendserver("NOTICE %s :You are not authorized for .op.\r\n", sender);
           }
 
         }
